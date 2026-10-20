@@ -1,0 +1,11 @@
+{
+  "name": "pi-workers-local",
+  "owner": { "name": "sacca" },
+  "plugins": [
+    {
+      "name": "pi-workers",
+      "source": "./",
+      "description": "Spawn and control multiple headless Pi/PiG agents in parallel via MCP"
+    }
+  ]
+}

@@ -1,0 +1,6 @@
+{
+  "name": "pi-workers",
+  "version": "0.1.0",
+  "description": "Spawn and control multiple headless Pi agents in parallel via MCP",
+  "skills": "./skills"
+}

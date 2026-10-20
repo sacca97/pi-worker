@@ -1,0 +1,22 @@
+// Manual smoke test over real MCP stdio: node tests/smoke.mjs  (spawns 2 real pi workers, prompt "test")
+import { Client } from "@modelcontextprotocol/sdk/client/index.js";
+import { StdioClientTransport } from "@modelcontextprotocol/sdk/client/stdio.js";
+const t = new StdioClientTransport({ command: "node", args: ["dist/src/mcp.js"], env: { ...process.env, PI_WORKERS_HOME: "/tmp/pi-workers-smoke" } });
+const c = new Client({ name: "smoke", version: "0" });
+await c.connect(t);
+const call = async (name, args) => JSON.parse((await c.callTool({ name, arguments: args })).content[0].text);
+console.log((await c.listTools()).tools.map((x) => x.name).join(","));
+const t0 = Date.now();
+const b = await call("agent_spawn_batch", { agents: [{ name: "a", prompt: "test" }, { name: "b", prompt: "test" }], defaults: { cwd: process.cwd() } });
+console.log("spawned in", Date.now() - t0, "ms", b.workers);
+const ids = b.workers.map((x) => x.id);
+const w = await call("agent_wait", { ids, timeoutMs: 120000 });
+console.log(w.timedOut, w.workers.map((x) => [x.name, x.state, x.usage?.total]));
+const r = await call("agent_result", { id: ids[0] });
+console.log(r.state, r.result?.summary?.slice(0, 200));
+await call("agent_prompt", { id: ids[0], message: "test again" });
+await call("agent_wait", { ids: [ids[0]], timeoutMs: 120000 });
+const r2 = await call("agent_result", { id: ids[0] });
+console.log("turn", r2.turn, r2.state, r2.text?.slice(0, 100));
+console.log((await call("agent_list", {})).map((x) => x.state));
+await c.close();
